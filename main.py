@@ -2072,15 +2072,6 @@ async def on_ready():
         import dashboard
         dashboard.start_dashboard()
         print("Dashboard and keep-alive server started on port 5000")
-        
-        # Add command logging hook
-        @bot.event
-        async def on_command(ctx):
-            try:
-                dashboard.emit_command_log(ctx.author.name, ctx.command.name)
-            except:
-                pass  # Don't let dashboard errors break bot functionality
-                
     except Exception as e:
         print(f"Failed to start dashboard: {e}")
 

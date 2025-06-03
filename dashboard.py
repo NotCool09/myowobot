@@ -1,13 +1,10 @@
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from flask_socketio import SocketIO, emit
-from flask_httpauth import HTTPBasicAuth
 import discord
 from discord.ext import commands
 import datetime
 import json
 import os
-import psutil
 from pymongo import MongoClient
 import asyncio
 import threading
@@ -19,8 +16,6 @@ import main
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-here')
-socketio = SocketIO(app, cors_allowed_origins="*")
-auth = HTTPBasicAuth()
 
 # MongoDB connection (reuse from main.py)
 mongo_client = main.mongo_client
@@ -291,27 +286,13 @@ def servers_page():
         ''', 200
 
 def run_dashboard():
-    """Run the dashboard in a separate thread with production server"""
-    from waitress import serve
-    serve(app, host='0.0.0.0', port=5000)
+    """Run the dashboard in a separate thread"""
+    app.run(host='0.0.0.0', port=5000, debug=False)
 
 @app.route('/test')
 def test_route():
     """Test route to verify Flask is working"""
     return "Dashboard is working! This is a test route."
-
-@app.route('/status')
-def status_page():
-    """Simplified status page"""
-    try:
-        return render_template('status.html',
-                             uptime=str(datetime.datetime.now() - main.bot.start_time).split('.')[0] if hasattr(main.bot, 'start_time') else "Unknown",
-                             cpu=psutil.cpu_percent(),
-                             memory=psutil.virtual_memory().percent,
-                             servers=len(getattr(main.bot, 'guilds', [])),
-                             timestamp=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    except Exception as e:
-        return f"Status page error: {e}", 500
 
 @app.route('/alive')
 def keep_alive():
@@ -323,113 +304,10 @@ def not_found_error(error):
     """Handle 404 errors"""
     return "Page not found. Available routes: /, /users, /servers, /test, /api/stats", 404
 
-@app.route('/admin')
-@auth.login_required
-def admin_panel():
-    """Admin control panel"""
-    try:
-        return render_template('admin.html',
-                             uptime=str(datetime.datetime.now() - main.bot.start_time).split('.')[0] if hasattr(main.bot, 'start_time') else "Unknown",
-                             cpu_usage=psutil.cpu_percent(),
-                             memory_usage=psutil.virtual_memory().percent,
-                             admin_secret=os.getenv("ADMIN_SECRET", "secret123"))
-    except Exception as e:
-        return f"Admin panel error: {e}", 500
-
-@app.route('/restart', methods=['POST'])
-def restart_bot():
-    """Restart bot (admin only)"""
-    if request.form.get('secret') == os.getenv("ADMIN_SECRET", "secret123"):
-        # In a real scenario, you'd implement bot restart logic here
-        return "Bot restart initiated...", 200
-    return "Unauthorized", 403
-
-@app.route('/user/<int:discord_id>')
-def user_profile(discord_id):
-    """User profile page"""
-    try:
-        user = main.bot.get_user(discord_id) if hasattr(main.bot, 'get_user') else None
-        
-        # Get user data from database
-        if mongo_client:
-            user_data = users.find_one({"_id": discord_id}) or {}
-        else:
-            user_data = main.users_data.get(discord_id, {}) if hasattr(main, 'users_data') else {}
-        
-        # Mock warnings for demo (replace with real data)
-        warnings = ["Spam (06/01)", "NSFW (06/15)"] if discord_id == 123456789 else []
-        
-        return render_template('user.html',
-                             user=user,
-                             user_data=user_data,
-                             warnings=warnings,
-                             join_date=user.created_at.strftime("%Y-%m-%d") if user else "Unknown")
-    except Exception as e:
-        return f"User profile error: {e}", 500
-
-@app.route('/api/backup')
-def backup_data():
-    """Backup bot data (admin only)"""
-    try:
-        backup = {
-            'timestamp': datetime.datetime.now().isoformat(),
-            'users': list(users.find()) if mongo_client else main.users_data if hasattr(main, 'users_data') else {},
-            'servers': get_bot_stats()
-        }
-        return jsonify(backup)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/system')
-def system_metrics():
-    """Get real-time system metrics"""
-    try:
-        return jsonify({
-            'uptime': str(datetime.datetime.now() - main.bot.start_time).split('.')[0] if hasattr(main.bot, 'start_time') else "Unknown",
-            'cpu': psutil.cpu_percent(),
-            'memory': psutil.virtual_memory().percent,
-            'servers': len(getattr(main.bot, 'guilds', [])),
-            'timestamp': datetime.datetime.now().isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@socketio.on('connect')
-def handle_connect():
-    """Handle client connection"""
-    print('Client connected to dashboard')
-    emit_system_update()
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Handle client disconnection"""
-    print('Client disconnected from dashboard')
-
 @app.errorhandler(500)
 def internal_error(error):
     """Handle 500 errors"""
     return f"Internal server error: {error}", 500
-
-@auth.verify_password
-def verify_password(username, password):
-    """Verify admin credentials"""
-    return username == os.getenv("ADMIN_USER", "admin") and password == os.getenv("ADMIN_PASS", "admin123")
-
-def emit_command_log(user, command):
-    """Emit command log to connected clients"""
-    socketio.emit('command_log', {
-        'user': user,
-        'command': command,
-        'time': datetime.datetime.now().strftime("%H:%M:%S")
-    })
-
-def emit_system_update():
-    """Emit system stats update"""
-    socketio.emit('system_update', {
-        'cpu': psutil.cpu_percent(),
-        'memory': psutil.virtual_memory().percent,
-        'uptime': str(datetime.datetime.now() - main.bot.start_time).split('.')[0] if hasattr(main.bot, 'start_time') else "Unknown"
-    })
 
 def start_dashboard():
     """Start the dashboard server"""
