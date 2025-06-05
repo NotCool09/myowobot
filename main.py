@@ -2006,7 +2006,7 @@ async def riddle(ctx):
             # Add XP based on difficulty
             xp_rewards = {"Easy": 30, "Medium": 50, "Hard": 80}
             xp_gained = xp_rewards.get(riddle['difficulty'], 40)
-            leveled_up, new_level = await �add_xp(ctx.author.id, xp_gained)
+            leveled_up, new_level = await add_xp(ctx.author.id, xp_gained)
             
             result_description = f"║ **🎉 RIDDLE SOLVED! 🎉** ║\n"
             result_description += f"║ Base Reward: {riddle['reward']:,} 💵 ║\n"
