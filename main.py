@@ -2365,7 +2365,7 @@ async def crime(ctx):
 
         embed = create_aesthetic_embed("Crime Scene Investigation", description, discord.Color.red(), ctx.author.display_avatar.url)
         embed.add_field(name="🚨 Wanted Level", value="🔥🔥🔥 **HIGH** 🔥🔥🔥", inline=True)
-        embed.add_field(name="⚖️ Justice", �value="**SERVED**", inline=True)
+        embed.add_field(name="⚖️ Justice", value="**SERVED**", inline=True)
         embed.add_field(name="🏥 Bail Cost", value=f"{penalty:,} 💵", inline=True)
 
     await ctx.send(embed=embed)
