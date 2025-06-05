@@ -2763,7 +2763,7 @@ async def give(ctx, member: discord.Member, amount: int):
     recipient = await get_user_data(member.id)
     await update_user_data(member.id, {"balance": recipient["balance"] + amount})
     
-�    await ctx.send(f"💸 {ctx.author.display_name} gave {amount} 💵 to {member.display_name}!")
+    await ctx.send(f"💸 {ctx.author.display_name} gave {amount} 💵 to {member.display_name}!")
 
 # Inventory commands
 @bot.command()
@@ -2944,7 +2944,7 @@ async def sell(ctx, *, args=""):
         if inventory["items"][item] < amount:
             embed = create_aesthetic_embed("❌ Insufficient Quantity", 
                                          f"║ You only have **{inventory['items'][item]}** {item}(s)! ║", 
-                                         �discord.Color.red())
+                                         discord.Color.red())
             return await ctx.send(embed=embed)
 
         if item in HUNT_ITEMS:
@@ -3175,7 +3175,7 @@ async def blackjack(ctx, amount: int):
     user = await get_user_data(ctx.author.id)
 
     if amount <= 0:
-        return aw�ait ctx.send("You must bet a positive amount!")
+        return await ctx.send("You must bet a positive amount!")
 
     if user["balance"] < amount:
         return await ctx.send("You don't have enough money!")
@@ -3387,7 +3387,7 @@ async def divorce(ctx):
 async def profile(ctx, member: discord.Member = None):
     """View your or someone else's profile"""
     member = member or ctx.author
-    user = awai�t get_user_data(member.id)
+    user = await get_user_data(member.id)
 
     embed = discord.Embed(title=f"{member.display_name}'s Profile", color=member.color)
     embed.set_thumbnail(url=member.display_avatar.url)
@@ -3582,7 +3582,7 @@ async def meme(ctx):
                                     embed = create_aesthetic_embed("Meme Central", description, discord.Color.orange())
                                     embed.set_image(url=data["url"])
                                     embed.add_field(name="📊 Stats", 
-                               �                   value=f"👍 {data.get('ups', 0):,} upvotes", 
+                                                  value=f"👍 {data.get('ups', 0):,} upvotes", 
                                                   inline=True)
                                     embed.add_field(name="🎯 Subreddit", 
                                                   value=f"r/{subreddit}", 
@@ -3757,7 +3757,7 @@ async def gif(ctx, *, search_term):
             params = {
                 "q": search_term,
                 "key": TENOR_API_KEY,
-            �    "limit": 20,  # Get multiple options
+                "limit": 20,  # Get multiple options
                 "media_filter": "gif",
                 "contentfilter": "medium",  # Filter out inappropriate content
                 "random": "true"  # Get random results
@@ -3951,7 +3951,7 @@ async def math(ctx, *, expression):
             result = eval(expression)
             await ctx.send(f"🧮 {expression} = {result}")
         else:
-            await ctx.send("❌ Invalid charac�ters in expression!")
+            await ctx.send("❌ Invalid characters in expression!")
     except:
         await ctx.send("❌ Invalid math expression!")
 
@@ -4157,7 +4157,7 @@ if __name__ == "__main__":
     
     for attempt in range(max_retries):
         try:
-            print(f"Star�ting bot (attempt {attempt + 1}/{max_retries})...")
+            print(f"Starting bot (attempt {attempt + 1}/{max_retries})...")
             bot.run(token)
             break
         except discord.errors.HTTPException as e:
