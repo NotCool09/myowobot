@@ -2548,7 +2548,7 @@ async def hunt(ctx):
     user = await get_user_data(ctx.author.id)
     now = datetime.datetime.now()
 
-    if user["last_hunt"] and (now - user["last_hunt"].replace(tzinfo=None))�.seconds < 300:
+    if user["last_hunt"] and (now - user["last_hunt"].replace(tzinfo=None)).seconds < 300:
         remaining = 300 - (now - user["last_hunt"].replace(tzinfo=None)).seconds
         minutes = remaining // 60
         seconds = remaining % 60
